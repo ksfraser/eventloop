@@ -1,6 +1,6 @@
 {
   "name": "ksfraser/eventloop",
-  "description": "A set of event loop classes.",
+  "description": "A set of classes for working with events, loops, notifications.",
   "type": "library",
   "authors": [
     {
