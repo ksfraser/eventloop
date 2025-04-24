@@ -120,7 +120,7 @@ class eventloop extends kfLog implements splSubject
 	* @param string the directory
 	* @return none but sets ->moduledir
 	***********************************************************************/
-	function set_moduledir( $dir )
+	public function set_moduledir(string $dir): void
 	{
 		global $moduledir;
 		//echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
@@ -208,7 +208,7 @@ class eventloop extends kfLog implements splSubject
          * @param string value not used
          *
          * ******************************************************************************/
-	function ObserverRegister( /*Class Instance*/$observer, $event )
+	public function ObserverRegister(object $observer, string $event): void
         {
 		echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
 		//return FALSE;
@@ -246,7 +246,7 @@ class eventloop extends kfLog implements splSubject
 	*
 	* @param string class name
 	*****/
-        function ObserverDeRegister( $observer )
+        public function ObserverDeRegister(object $observer): void
         {
 		//echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
               	$this->observers[] = array_diff( $this->observers, array( $observer) );
@@ -275,7 +275,7 @@ class eventloop extends kfLog implements splSubject
          * @param mixed ideally is the object that triggered the event
 	 * @returns bool
          * *******************************************************************************/
-        function ObserverNotify( $trigger_class, $event, $msg )
+        public function ObserverNotify(object $trigger_class, string $event, $msg): bool
         {
 		echo get_class( $this ) . "::" . __METHOD__ . " TRIGGER:: " . get_class( $trigger_class ) . ":: Event::" . $event . ":: msg::" . print_r( $msg ) . "<br />\n\r";
 		if( null !== $trigger_class )
@@ -330,7 +330,7 @@ class eventloop extends kfLog implements splSubject
                               	$obs->notified( $trigger_class, $event, $msg );
                       	}
 		}
-               	return SUCCESS;
+               	return true;
          }
 	/**//***********************************************************
 	* Get the list of classes that will react to an event.
@@ -338,7 +338,7 @@ class eventloop extends kfLog implements splSubject
 	* @param string the event
 	* @return array list of classes
 	****************************************************************/
-	function getEventObservers( $event = "*" )
+	public function getEventObservers(string $event = "*"): array
     	{
 		//echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
         	$this->initEventGroup($event);
@@ -367,7 +367,7 @@ class eventloop extends kfLog implements splSubject
 	 * @param none
 	 * @return bool did we load modules or not
 	 *************************************************************/
-	function load_modules()
+	public function load_modules(): bool
 	{
 		global $MODULESLOADED;
 		if( $this->modulesLoaded OR $MODULESLOADED )
@@ -617,13 +617,13 @@ class eventloop extends kfLog implements splSubject
 		}
 		$this->ObserverNotify( $this, 'NOTIFY_LOG_INFO', __LINE__ . "::Completed Adding Modules" );
 
-		return TRUE;
+		return true;
 	}
 /****************************splSubject************************************************/
 	/**//**
 	*
 	*****/
-	public function attach(\SplObserver $observer, $event = "*")
+	public function attach(SplObserver $observer, string $event = "*"): void
     	{
 		//echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
         	$this->initEventGroup($event);
@@ -633,7 +633,7 @@ class eventloop extends kfLog implements splSubject
 	/**//**
 	*
 	*****/
-    	public function detach(\SplObserver $observer, $event = "*")
+    	public function detach(SplObserver $observer, string $event = "*"): void
     	{
 		//echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
 		$this->storage->detach($observer);	//php.net
@@ -653,7 +653,7 @@ class eventloop extends kfLog implements splSubject
 	/**//**
 	*
 	*****/
-    	public function notify( $event = "*", $data = null)
+    	public function notify( string $event = "*", $data = null): void
     	{
 		//echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
         	foreach ($this->getEventObservers($event) as $observer) {
