@@ -58,6 +58,8 @@ class eventloop extends kfLog implements splSubject
 	public $moduledir;
 	private $logmodnotloaded;
 	protected $modulesLoaded;	//<! bool
+	private $actions = [];
+    private $triggers = [];
 
 	/**//**
 	*
@@ -664,6 +666,62 @@ class eventloop extends kfLog implements splSubject
 		//!php.net
     	}
 /****************************!splSubject************************************************/
+
+    /**
+     * Add an action to the event loop.
+     *
+     * @param string $event
+     * @param callable $callback
+     * @param int $priority
+     */
+    public function add_action(string $event, callable $callback, int $priority = 10): void
+    {
+        $this->actions[$event][$priority][] = $callback;
+        ksort($this->actions[$event]);
+    }
+
+    /**
+     * Execute all actions associated with an event.
+     *
+     * @param string $event
+     * @param mixed $data
+     */
+    public function do_action(string $event, $data = null): void
+    {
+        if (isset($this->actions[$event])) {
+            foreach ($this->actions[$event] as $priority => $callbacks) {
+                foreach ($callbacks as $callback) {
+                    call_user_func($callback, $data);
+                }
+            }
+        }
+    }
+
+    /**
+     * Register a trigger for an event.
+     *
+     * @param string $event
+     * @param callable $trigger
+     */
+    public function register_trigger(string $event, callable $trigger): void
+    {
+        $this->triggers[$event][] = $trigger;
+    }
+
+    /**
+     * Process a workflow by executing all triggers for an event.
+     *
+     * @param string $event
+     * @param mixed $data
+     */
+    public function process_workflow(string $event, $data = null): void
+    {
+        if (isset($this->triggers[$event])) {
+            foreach ($this->triggers[$event] as $trigger) {
+                call_user_func($trigger, $data);
+            }
+        }
+    }
 }
 
 
