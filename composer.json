@@ -10,11 +10,16 @@
   ],
   "minimum-stability": "dev",
   "require": {
-      "ksfraser/kfLog": "*"
+      "ksfraser/kflog": "*"
   },
   "autoload": {
     "psr-4": {
       "ksfraser\\origin\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Eventloop\\Tests\\": "tests/"
     }
   },
   "require-dev": {
