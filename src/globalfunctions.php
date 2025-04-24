@@ -1,11 +1,13 @@
 <?php
 namespace Eventloop;
 
-$global_eventloop = new EventManager();
+use Eventloop\Factories\EventManagerFactory;
+
+$global_eventloop = EventManagerFactory::create();
 
 /**
  * WordPress-style function to add an action.
- *
+*
  * @param string $event The event to associate the action with.
  * @param callable $callback The callback function to execute.
  * @param int $priority The priority of the action (lower numbers execute first).
@@ -18,7 +20,7 @@ function add_action($event, callable $callback, $priority = 10)
 
 /**
  * WordPress-style function to execute an action.
- *
+*
  * @param string $event The event to execute actions for.
  * @param mixed $data Optional data to pass to the actions.
  */
@@ -30,7 +32,7 @@ function do_action($event, $data = null)
 
 /**
  * SuiteCRM-style function to register a trigger.
- *
+*
  * @param string $event The event to associate the trigger with.
  * @param callable $trigger A callable function to execute as the trigger.
  */
@@ -42,7 +44,7 @@ function register_trigger($event, callable $trigger)
 
 /**
  * SuiteCRM-style function to process a workflow.
- *
+*
  * @param string $event The event to handle.
  * @param mixed $data Optional data to pass to triggers, conditions, and actions.
  */
