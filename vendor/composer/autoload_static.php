@@ -7,14 +7,14 @@ namespace Composer\Autoload;
 class ComposerStaticInit35cd2a77fac2b84483c5f8c5f8211525
 {
     public static $prefixLengthsPsr4 = array (
-        'k' => 
+        'E' => 
         array (
-            'ksfraser\\origin\\' => 16,
+            'Eventloop\\' => 10,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'ksfraser\\origin\\' => 
+        'Eventloop\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),

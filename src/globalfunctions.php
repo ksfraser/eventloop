@@ -1,7 +1,7 @@
 <?php
 namespace Eventloop;
 
-$global_eventloop = new eventloop();
+$global_eventloop = new EventManager();
 
 /**
  * WordPress-style function to add an action.
@@ -13,7 +13,7 @@ $global_eventloop = new eventloop();
 function add_action($event, callable $callback, $priority = 10)
 {
     global $global_eventloop;
-    $global_eventloop->add_action($event, $callback, $priority);
+    $global_eventloop->addEvent($event, $callback, $priority);
 }
 
 /**
@@ -25,7 +25,7 @@ function add_action($event, callable $callback, $priority = 10)
 function do_action($event, $data = null)
 {
     global $global_eventloop;
-    $global_eventloop->do_action($event, $data);
+    $global_eventloop->executeEvent($event, $data);
 }
 
 /**
@@ -37,7 +37,7 @@ function do_action($event, $data = null)
 function register_trigger($event, callable $trigger)
 {
     global $global_eventloop;
-    $global_eventloop->register_trigger($event, $trigger);
+    $global_eventloop->addEvent($event, $trigger);
 }
 
 /**
@@ -49,5 +49,5 @@ function register_trigger($event, callable $trigger)
 function process_workflow($event, $data = null)
 {
     global $global_eventloop;
-    $global_eventloop->process_workflow($event, $data);
+    $global_eventloop->executeEvent($event, $data);
 }

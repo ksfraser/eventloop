@@ -6,5 +6,5 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'ksfraser\\origin\\' => array($baseDir . '/src'),
+    'Eventloop\\' => array($baseDir . '/src'),
 );
