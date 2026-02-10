@@ -1,0 +1,28 @@
+<?php
+
+$autoload = __DIR__ . '/../vendor/autoload.php';
+if (file_exists($autoload)) {
+    require_once $autoload;
+}
+
+// Fallback autoloader for environments where Composer deps are not installed yet.
+spl_autoload_register(static function (string $class): void {
+    $prefixes = [
+        'Eventloop\\' => __DIR__ . '/../src/',
+    ];
+
+    foreach ($prefixes as $prefix => $baseDir) {
+        if (strncmp($class, $prefix, strlen($prefix)) !== 0) {
+            continue;
+        }
+
+        $relative = substr($class, strlen($prefix));
+        $file = $baseDir . str_replace('\\', '/', $relative) . '.php';
+
+        if (file_exists($file)) {
+            require_once $file;
+        }
+
+        return;
+    }
+});

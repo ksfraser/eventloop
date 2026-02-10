@@ -1,86 +1,62 @@
 <?php
 
+declare(strict_types=1);
+
+namespace Eventloop\Tests;
+
+use Eventloop\EventManager;
+use Eventloop\ObserverManager;
+use Eventloop\Sanitizer;
 use PHPUnit\Framework\TestCase;
-use Eventloop\eventloop;
+use SplObserver;
+use SplSubject;
 
-/**
- * PHPUnit test cases for the Eventloop class.
- */
-class EventloopTest extends TestCase
+final class EventloopTest extends TestCase
 {
-    /**
-     * Test setting the module directory.
-     */
-    public function testSetModuledir(): void
+    public function testSanitizerEscapesHtml(): void
     {
-        $eventloop = new eventloop();
-        $eventloop->set_moduledir('/path/to/modules');
-        $this->assertEquals('/path/to/modules', $eventloop->moduledir);
-    }
-
-    /**
-     * Test registering an observer.
-     */
-    public function testObserverRegister(): void
-    {
-        $eventloop = new eventloop();
-        $observer = $this->createMock(SplObserver::class);
-        $eventloop->ObserverRegister($observer, 'test_event');
-        $observers = $eventloop->getEventObservers('test_event');
-        $this->assertContains($observer, $observers);
-    }
-
-    /**
-     * Test notifying observers.
-     */
-    public function testObserverNotify(): void
-    {
-        $eventloop = new eventloop();
-        $observer = $this->createMock(SplObserver::class);
-        $observer->expects($this->once())
-                 ->method('update')
-                 ->with($this->equalTo($eventloop));
-
-        $eventloop->ObserverRegister($observer, 'test_event');
-        $eventloop->ObserverNotify($eventloop, 'test_event', 'Test message');
-    }
-
-    /**
-     * Test input sanitization.
-     */
-    public function testSanitizeInput(): void
-    {
-        $eventloop = new eventloop();
         $input = '<script>alert("XSS")</script>';
-        $sanitized = $eventloop->sanitizeInput($input);
-        $this->assertEquals('&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;', $sanitized);
+        $this->assertSame('&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;', Sanitizer::sanitize($input));
     }
 
-    /**
-     * Test adding and executing hooks.
-     */
-    public function testAddHookAndExecuteHooks(): void
+    public function testSanitizerSanitizeArrayProcessesEachElement(): void
     {
-        $eventloop = new eventloop();
-        $eventloop->add_action('test_event', function ($data) {
-            return $data . ' modified';
-        });
-
-        $result = $eventloop->do_action('test_event', 'original data');
-        $this->assertNull($result); // do_action does not return a value
+        $inputs = ['<b>a</b>', 'x"y'];
+        $this->assertSame(['&lt;b&gt;a&lt;/b&gt;', 'x&quot;y'], Sanitizer::sanitizeArray($inputs));
     }
 
-    /**
-     * Test registering and processing triggers.
-     */
-    public function testRegisterTriggerAndProcessWorkflow(): void
+    public function testEventManagerExecutesCallbacksByPriorityDescending(): void
     {
-        $eventloop = new eventloop();
-        $eventloop->register_trigger('test_event', function ($data) {
-            echo "Trigger executed with data: $data";
-        });
+        $mgr = new EventManager();
+        $calls = [];
 
-        $this->expectOutputString("Trigger executed with data: workflow data");
-        $eventloop->process_workflow('test_event', 'workflow data');
+        $mgr->addEvent('evt', function () use (&$calls): void { $calls[] = 'low'; }, 0);
+        $mgr->addEvent('evt', function () use (&$calls): void { $calls[] = 'high'; }, 10);
+
+        $mgr->executeEvent('evt');
+        $this->assertSame(['high', 'low'], $calls);
+    }
+
+    public function testObserverManagerNotifiesAttachedObservers(): void
+    {
+        $manager = new ObserverManager();
+
+        $subject = new class implements SplSubject {
+            public function attach(SplObserver $observer): void {}
+            public function detach(SplObserver $observer): void {}
+            public function notify(): void {}
+        };
+
+        $called = 0;
+        $observer = new class ($called) implements SplObserver {
+            private int $called;
+            public function __construct(int &$called) { $this->called = &$called; }
+            public function update(SplSubject $subject): void { $this->called++; }
+        };
+
+        $manager->attach($observer);
+        $manager->notify($subject);
+
+        $this->assertSame(1, $called);
     }
 }
