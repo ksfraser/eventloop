@@ -19,7 +19,7 @@ class EventManager
     public function addEvent(string $event, callable $callback, int $priority = 10): void
     {
         $this->events[$event][$priority][] = $callback;
-        ksort($this->events[$event]);
+        krsort($this->events[$event]);
     }
 
     /**
