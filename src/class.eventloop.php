@@ -12,6 +12,7 @@ if (!class_exists('Composer\Autoload\ClassLoader', false)) {
 //require_once( 'class.kfLog.php' );	//Extends origin
 use ksfraser\kfLog;
 use Ksfraser\Event\EventManager;
+use Ksfraser\Origin\origin;
 
 define( 'MINMODPATH', 12 );
 
@@ -52,7 +53,7 @@ $configArray = array();	//Module configs use this
 global $configArray;
 $configArray = array(); //Module configs use this
 
-class eventloop extends kfLog implements \SplSubject
+class eventloop extends origin implements \SplSubject
 {
 	var $config_values = array();   //What fields to be put on config screen
 	var $tabs = array();
@@ -66,14 +67,16 @@ class eventloop extends kfLog implements \SplSubject
 	protected $modulesLoaded;	//<! bool
 	private $actions = [];
     private $triggers = [];
-    private ?EventManager $eventManager = null;
+    private $eventManager; // EventManager instance
+    private $logger; // kfLog instance for logging
 
 	/**//**
 	*
 	*****/
 	function __construct( $moduledir = null, $caller = null )
 	{
-		parent::__construct();
+		parent::__construct(); // Call origin constructor
+		$this->logger = new kfLog(__FILE__, PEAR_LOG_DEBUG); // Initialize logger via composition
 		$this->caller = $caller;
 		$this->storage = new \SplObjectStorage();	//php.net
 		$this->initEventGroup( '*' );
@@ -208,6 +211,48 @@ class eventloop extends kfLog implements \SplSubject
 */
 		}
 	}
+
+	/***************************************************************************//**
+	 * Proxy methods for kfLog functionality (composition instead of inheritance)
+	 * These methods delegate to the composed $logger instance
+	 ******************************************************************************/
+	
+	/**
+	 * Log a message
+	 * @param mixed $message
+	 * @param int $level PEAR log level
+	 */
+	public function Log($message, $level = PEAR_LOG_EMERG)
+	{
+		return $this->logger->Log($message, $level);
+	}
+
+	/**
+	 * Log a timestamped message
+	 * @param mixed $message
+	 * @param int $level PEAR log level
+	 */
+	public function stampLog($message, $level = PEAR_LOG_EMERG)
+	{
+		return $this->logger->stampLog($message, $level);
+	}
+
+	/**
+	 * Log level shortcuts - delegate to logger
+	 */
+	public function log_0($obj, $msg) { return $this->logger->log_0($obj, $msg); }
+	public function log_1($obj, $msg) { return $this->logger->log_1($obj, $msg); }
+	public function log_2($obj, $msg) { return $this->logger->log_2($obj, $msg); }
+	public function log_3($obj, $msg) { return $this->logger->log_3($obj, $msg); }
+	public function log_4($obj, $msg) { return $this->logger->log_4($obj, $msg); }
+	public function log_5($obj, $msg) { return $this->logger->log_5($obj, $msg); }
+	public function log_6($obj, $msg) { return $this->logger->log_6($obj, $msg); }
+	public function log_7($obj, $msg) { return $this->logger->log_7($obj, $msg); }
+
+	/***************************************************************************//**
+	 * End of kfLog proxy methods
+	 ******************************************************************************/
+
 	 /*****************************************************************************//**
          *ObserverRegister is the fcn that registers a class against an event
          *

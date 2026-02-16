@@ -108,11 +108,24 @@ final class EventloopInheritanceTest extends TestCase
     }
 
     /**
-     * Test that eventloop extends kfLog (before refactoring)
+     * Test that eventloop no longer extends kfLog (now uses composition)
      */
-    public function testExtendsKfLog(): void
+    public function testDoesNotExtendKfLog()
     {
-        $this->assertInstanceOf(\ksfraser\kfLog::class, $this->eventloop);
+        $this->assertNotInstanceOf(\ksfraser\kfLog::class, $this->eventloop);
+    }
+
+    /**
+     * Test that eventloop has logger functionality via composition
+     */
+    public function testLoggerFunctionalityViaComposition()
+    {
+        // Log methods should work even though we don't extend kfLog
+        $this->eventloop->Log('Test via composition', PEAR_LOG_DEBUG);
+        $this->eventloop->stampLog('Stamped test', PEAR_LOG_INFO);
+        
+        // If we get here without errors, composition is working
+        $this->assertTrue(true);
     }
 
     /**
