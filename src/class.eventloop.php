@@ -4,7 +4,10 @@ namespace Ksfraser\Eventloop;
 
 $path_to_root="../..";
 
-require __DIR__ . '/vendor/autoload.php';
+// Only require autoload if not already loaded (for standalone usage)
+if (!class_exists('Composer\Autoload\ClassLoader', false)) {
+    require __DIR__ . '/../vendor/autoload.php';
+}
 
 //require_once( 'class.kfLog.php' );	//Extends origin
 use ksfraser\kfLog;
@@ -49,7 +52,7 @@ $configArray = array();	//Module configs use this
 global $configArray;
 $configArray = array(); //Module configs use this
 
-class eventloop extends kfLog implements splSubject
+class eventloop extends kfLog implements \SplSubject
 {
 	var $config_values = array();   //What fields to be put on config screen
 	var $tabs = array();
@@ -208,12 +211,12 @@ class eventloop extends kfLog implements splSubject
 	 /*****************************************************************************//**
          *ObserverRegister is the fcn that registers a class against an event
          *
-         * @param class object to be registered
-         * @param string event to register for
-         * @param string value not used
+         * @param object $observer class object to be registered
+         * @param string $event event to register for
+         * @param mixed $value callback function name (not used in eventloop implementation)
          *
          * ******************************************************************************/
-	public function ObserverRegister(object $observer, string $event): void
+	public function ObserverRegister($observer, $event, $value = null)
         {
 		echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
 		$this->initEventGroup( $event );
@@ -239,9 +242,9 @@ class eventloop extends kfLog implements splSubject
 	* For a small web-app this probably has no utility.
 	* For a larger app where this class is re-used this could have some use.
 	*
-	* @param string class name
+	* @param object $observer class instance to deregister
 	*****/
-        public function ObserverDeRegister(object $observer): void
+        public function ObserverDeRegister($observer)
         {
 		//echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
               	$this->observers[] = array_diff( $this->observers, array( $observer) );
@@ -264,12 +267,12 @@ class eventloop extends kfLog implements splSubject
         /*****************************************************************************//**
          *ObserverNotify loops throug observers and tells interested ones about the event
          *
-	 * @param class
-         * @param string event to match against
-         * @param mixed ideally is the object that triggered the event
-	 * @returns bool
+	 * @param object $trigger_class
+         * @param string $event event to match against
+         * @param mixed $msg ideally is the object that triggered the event
+	 * @return bool
          * *******************************************************************************/
-        public function ObserverNotify(object $trigger_class, string $event, $msg): bool
+        public function ObserverNotify($trigger_class, $event, $msg)
         {
 		echo get_class( $this ) . "::" . __METHOD__ . " TRIGGER:: " . get_class( $trigger_class ) . ":: Event::" . $event . ":: msg::" . print_r( $msg ) . "<br />\n\r";
 		
@@ -359,7 +362,7 @@ class eventloop extends kfLog implements splSubject
 		{
 			//We've already loaded the modules, don't do it again (until I code a re-load function)
 			echo get_class( $this ) . "::" . __METHOD__ . "MODULES are already loaded ";
-			return;
+			return true;
 		}
 		//echo get_class( $this ) . "::" . __METHOD__ . "<br />\n\r";
 		global $configArray;
@@ -607,18 +610,28 @@ class eventloop extends kfLog implements splSubject
 /****************************splSubject************************************************/
 	/**//**
 	*
-	*****/
-	public function attach(SplObserver $observer, string $event = "*"): void
+	/**
+	 * Attach an observer (SplSubject interface implementation)
+	 * 
+	 * @param \SplObserver $observer
+	 * @param string $event
+	 * @return void
+	 */
+	public function attach($observer, $event = '*')
     	{
 		//echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
         	$this->initEventGroup($event);
         	$this->observers[$event][] = $observer;
 		$this->storage->attach($observer);	//php.net
     	}
-	/**//**
-	*
-	*****/
-    	public function detach(SplObserver $observer, string $event = "*"): void
+	/**
+	 * Detach an observer (SplSubject interface implementation)
+	 * 
+	 * @param \SplObserver $observer
+	 * @param string $event
+	 * @return void
+	 */
+    	public function detach($observer, $event = "*")
     	{
 		//echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
 		$this->storage->detach($observer);	//php.net
@@ -638,7 +651,7 @@ class eventloop extends kfLog implements splSubject
 	/**//**
 	*
 	*****/
-    	public function notify( string $event = "*", $data = null): void
+    	public function notify($event = "*", $data = null)
     	{
 		//echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
         	foreach ($this->getEventObservers($event) as $observer) {
