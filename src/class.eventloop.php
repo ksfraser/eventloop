@@ -1,11 +1,14 @@
 <?php
 
+namespace Ksfraser\Eventloop;
+
 $path_to_root="../..";
 
 require __DIR__ . '/vendor/autoload.php';
 
 //require_once( 'class.kfLog.php' );	//Extends origin
 use ksfraser\kfLog;
+use Ksfraser\Event\EventManager;
 
 define( 'MINMODPATH', 12 );
 
@@ -60,6 +63,7 @@ class eventloop extends kfLog implements splSubject
 	protected $modulesLoaded;	//<! bool
 	private $actions = [];
     private $triggers = [];
+    private ?EventManager $eventManager = null;
 
 	/**//**
 	*
@@ -68,11 +72,12 @@ class eventloop extends kfLog implements splSubject
 	{
 		parent::__construct();
 		$this->caller = $caller;
-		$this->storage = new SplObjectStorage();	//php.net
+		$this->storage = new \SplObjectStorage();	//php.net
 		$this->initEventGroup( '*' );
 		$this->initEventGroup( '**' );
 		$this->logmodnotloaded = 0;
 		$this->modulesLoaded = false;
+		$this->eventManager = EventManager::getInstance();
  		/* 
 		 * locate Module class files to open 
 		 */
@@ -211,32 +216,22 @@ class eventloop extends kfLog implements splSubject
 	public function ObserverRegister(object $observer, string $event): void
         {
 		echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
-		//return FALSE;
 		$this->initEventGroup( $event );
 		echo "Attaching Observer " . get_class( $observer ) . " to event " . $event . "\n\r";
-		$this->observers[$event][] = $observer;	//Indirect modification has no effect ERROR
-			//->observers is a private var, initialized as an array in class definition.
-/*
-		try {
-			if( isset( $this->observers[$event] ) )
-			{
-               			$this->observers[$event][] = $observer;	//Indirect modification has no effect ERROR
+		
+		// Legacy array storage for backward compatibility
+		$this->observers[$event][] = $observer;
+		
+		// Delegate to modern EventManager
+		$this->eventManager->addListener($event, function($legacyEvent) use ($observer) {
+			if (method_exists($observer, 'notified')) {
+				$observer->notified(
+					$legacyEvent->getTrigger(),
+					$legacyEvent->getName(),
+					$legacyEvent->getMessage()
+				);
 			}
-			else
-			{
-				$this->observers[$event] = array();
-               			$this->observers[$event][] = $observer;	//Indirect modification has no effect ERROR
-			}
-			//$this->observers[$event] = array_merge( $this->observers[$event], $observer );
-               		return SUCCESS;
-		}
-		catch( Exception $e )
-		{
-			$this->notify( __METHOD__ . ":" . __LINE__  . " Error: " . $e->getMessage(), "ERROR" );
-			$this->notify( __METHOD__ . ":" . __LINE__ . print_r( $this->observers, true ), "WARN" );
-        	}
-		return FALSE;
-*/
+		});
 	}
 	/**//**
 	* Remove an Observer
@@ -250,7 +245,6 @@ class eventloop extends kfLog implements splSubject
         {
 		//echo get_class( $this ) . "::" . __METHOD__ . "\n\r";
               	$this->observers[] = array_diff( $this->observers, array( $observer) );
-              	return SUCCESS;
         }
 	/**//**********************************************************************
 	* Create the initial array entry for an event
@@ -278,6 +272,12 @@ class eventloop extends kfLog implements splSubject
         public function ObserverNotify(object $trigger_class, string $event, $msg): bool
         {
 		echo get_class( $this ) . "::" . __METHOD__ . " TRIGGER:: " . get_class( $trigger_class ) . ":: Event::" . $event . ":: msg::" . print_r( $msg ) . "<br />\n\r";
+		
+		// Dispatch via modern EventManager
+		$legacyEvent = new LegacyEvent($trigger_class, $event, $msg);
+		$this->eventManager->dispatch($legacyEvent);
+		
+		// Legacy logging for backward compatibility
 		if( null !== $trigger_class )
 		{
 			$tclass = get_class( $trigger_class );
@@ -286,6 +286,7 @@ class eventloop extends kfLog implements splSubject
 		{
 			$tclass = "UNDEF";
 		}
+		
 		if( ! isset( $this->observers[$event] ) )
 		{
 			switch( $event )
@@ -305,30 +306,14 @@ class eventloop extends kfLog implements splSubject
 		}
 		else
 		{
-               		if ( isset( $this->observers[$event] ) )
+			if (is_string( $msg ) )
 			{
-				if( is_string( $msg ) )
-				{
-					$this->Log( $tclass  . " had event " . $event . " with message " . $msg, 1 );
-				}
-				else
-				{
-					$this->Log( $tclass  . " had event " . $event, 1 );
-				}
-				echo "Handle EVENT: " . $event . "\n\r"; 
-				foreach ( $this->observers[$event] as $obs ) 
-				{
-					$obs->notified( $trigger_class, $event, $msg );
-	        		}
+				$this->Log( $tclass  . " had event " . $event . " with message " . $msg, 1 );
 			}
-		}
-               	/* '**' being used as 'ALL' */
-               	if ( isset( $this->observers['**'] ) )
-		{
-                      	foreach ( $this->observers['**'] as $obs )
-                      	{
-                              	$obs->notified( $trigger_class, $event, $msg );
-                      	}
+			else
+			{
+				$this->Log( $tclass  . " had event " . $event, 1 );
+			}
 		}
                	return true;
          }

@@ -11,8 +11,9 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-      "ksfraser/kflog": "^0.1",
-    "ksfraser/exceptions": "*"
+    "ksfraser/kflog": "dev-main",
+    "ksfraser/exceptions": "*",
+    "ksfraser/event": "*"
   },
   "repositories": [
     {
@@ -29,11 +30,15 @@
       "options": {
         "symlink": false
       }
+    },
+    {
+      "type": "path",
+      "url": "../event"
     }
   ],
   "autoload": {
     "psr-4": {
-      "Eventloop\\": "src/"
+      "Ksfraser\\Eventloop\\": "src/"
     }
   },
   "autoload-dev": {
@@ -42,10 +47,9 @@
     }
   },
   "require-dev": {
-      "phpunit/phpunit": "^9.5"
+    "phpunit/phpunit": "^9.5"
   },
   "scripts": {
     "test": "@php vendor/bin/phpunit"
   }
 }
-
