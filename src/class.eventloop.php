@@ -384,7 +384,7 @@ class eventloop extends kfLog implements splSubject
 		//var_dump( $this->moduledir );
 		if( ! is_dir( $this->moduledir ) )
 		{
-			throw new Exception( "Moduledir does not exist! :: " . $this->moduledir, KSF_INVALID_DATA_VALUE );
+			throw new InvalidDataValueException( "Moduledir does not exist! :: " . $this->moduledir, KSF_INVALID_DATA_VALUE );
 		}
 	        foreach (glob("{$this->moduledir}/config.*.php") as $filename)
 	        {

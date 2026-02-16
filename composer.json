@@ -11,15 +11,17 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-      "ksfraser/kflog": "*"
+      "ksfraser/kflog": "^0.1",
+    "ksfraser/exceptions": "*"
   },
   "repositories": [
     {
       "type": "path",
-      "url": "../kflog",
-      "options": {
-        "symlink": false
-      }
+      "url": "../Exceptions"
+    },
+    {
+      "type": "path",
+      "url": "../kfLog"
     },
     {
       "type": "path",
